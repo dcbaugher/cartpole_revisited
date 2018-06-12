@@ -19,7 +19,7 @@ logdir = '{}/run-{}/'.format(root_logdir, now)
 ###### Agent
 class PolyGradAgent(object):
     
-    def __init__(self, action_space):
+    def __init__(self):
         
         ### model hyperparameters
 
