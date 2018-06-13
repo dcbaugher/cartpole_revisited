@@ -144,7 +144,7 @@ for i_episode in range(10000):
     episode_rewards = 0      
     episode_states_list = []
     episode_actions_list = []
-    
+    uncertainties_list = []
         
         
     for t in range(200):
@@ -180,7 +180,8 @@ for i_episode in range(10000):
         
         episode_states_list.append(observation) # append this state to our episode states list
         episode_actions_list.append(action) # append chosen action to our episode actions list
-
+        uncertainties_list.append(unscaled_confidence)
+  
         ## Action step
         observation, reward, done, info = env.step(action)
        
@@ -197,6 +198,8 @@ for i_episode in range(10000):
     print(wondering_gnome.epsilon)
     print("Experince amount: ")
     print(wondering_gnome.experience)
+    print("Avg Uncertainty: ")
+    print(np.mean(uncertainties_list))
    
     # Add episode score to last 100 scores
     wondering_gnome.last_100_episode_scores.append(episode_rewards)
@@ -224,13 +227,18 @@ for i_episode in range(10000):
     ## If we did well update our last good batch and amount of experience
     if wondering_gnome.did_we_do_well(episode_rewards):
 
-        wondering_gnome.last_good_batch = batch
+        if np.mean(uncertainties_list) < 1.5:
+        
+            wondering_gnome.memory_batches.append(batch)
 
-        wondering_gnome.experience += len(episode_states_list)
+        
 
     
     ## Train our LSTM after every episode, but only with our most recent good batch
-    train_step.run(feed_dict={state: wondering_gnome.last_good_batch[0], actions: wondering_gnome.last_good_batch[1]}) # , keep_prob: 0.75})
+    batches = wondering_gnome.get_batches()
+    for mem_batch in batches:
+    
+        train_step.run(feed_dict={state: wondering_gnome.mem_batch[0], actions: wondering_gnome.mem_batch[1]}) # , keep_prob: 0.75})
 
     ## Our LSTM has been trained
     if i_episode > 1:
@@ -238,6 +246,6 @@ for i_episode in range(10000):
 
     ## Do some logging of our current loss
     if i_episode % 20 == 0:
-        summary_str = loss_summary.eval(feed_dict={state: wondering_gnome.last_good_batch[0], actions: wondering_gnome.last_good_batch[1]})
+        summary_str = loss_summary.eval(feed_dict={state: wondering_gnome.batch[0], actions: wondering_gnome.batch[1]})
         step = i_episode
         file_writer.add_summary(summary_str, step)
