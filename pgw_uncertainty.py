@@ -26,9 +26,9 @@ class PolyGradAgent(object):
         self.epsilon = 0.9  # how much do we explore initially
         self.epsilon_decay_rate = 0.95  # rate by which exploration decreases, used for constant epsilon decay strategy
         self.high_score = 0  # keep track of highest score obtained thus far
-        self.did_well_threshold = 0.70  # how close we need to be to our high score to have "done well"
+        self.did_well_threshold = 0.75  # how close we need to be to our high score to have "done well"
         self.network_has_had_training = False  # has our neural net had any training
-        self.memory_batches = deque(maxlen = 10)
+        self.memory_batches = deque(maxlen = 50)
         self.last_100_episode_scores = deque(maxlen = 100) # keep track of average score from last 100 episodes
 
 
@@ -70,10 +70,10 @@ class PolyGradAgent(object):
     """
        Get training batches
     """    
-    def get_batches(self):
+    def get_batches(self, batch_size):
     
-        batches_list = list(self.memory_batches)
-        return batches_list
+        batches = random.sample(self.memory_batches, batch_size)
+        return batches
 
 
 
@@ -235,7 +235,7 @@ for i_episode in range(10000):
 
     
     ## Train our LSTM after every episode, but only with our most recent good batch
-    batches = wondering_gnome.get_batches()
+    batches = wondering_gnome.get_batches(batch_size=1)
     for mem_batch in batches:
     
         train_step.run(feed_dict={state: wondering_gnome.mem_batch[0], actions: wondering_gnome.mem_batch[1]}) # , keep_prob: 0.75})
